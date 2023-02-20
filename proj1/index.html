@@ -32,9 +32,8 @@
 <div>
 
 <h2 align="middle">Overview</h2>
-<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
 
-<p>In this project, we created a program that could rasterize multiple triangles. These triangles could be monochromatic, but they also could have a gradient in color or even sample their colors from other images. I think I approached this pretty standardly, going through the tasks as individual sets, except for implementing Task 5 and 6 simultaneously. In a tad bit more detail, we implemented basic rasterization of triangles, then added transformations, then finally used barycentric coordinates to allow for more complicated triangle coloring based on location within the triangles. I found out of bounds issues the hardest to deal with, especially when I was trying to zoom into an image. I solved this by clamping diligently and whenever necessary. I also didn’t realize for a while that the texture barycentric coordinates were between 0 and 1 instead of width and height (of level zero). Once I got that fixed, however, it was a lot better.</p>
+<p>In this project, we created a program that could rasterize multiple triangles. These triangles could be monochromatic, but they also could have a gradient in color or even sample their colors from other images. I think I approached this pretty standardly, going through the tasks as individual sets, except for implementing Task 5 and 6 simultaneously. In a tad bit more detail, I implemented basic rasterization of triangles, then added transformations, then finally used barycentric coordinates to allow for more complicated triangle coloring based on location within the triangles. I found out of bounds issues the hardest to deal with, especially when I was trying to zoom into an image. I solved this by clamping diligently and whenever necessary. I also didn’t realize for a while that the texture barycentric coordinates were between 0 and 1 instead of width and height (of level zero). Once I got that fixed, however, it was a lot better.</p>
 
 <h2 align="middle">Section I: Rasterization</h2>
 
@@ -187,7 +186,7 @@
 <h3 align="middle">Part 7: Draw something interesting!</h3>
 -->
 
-<p>Website URL: <a href="https://cal-cs184-student.github.io/project-webpages-sp23-andrewhuang56/proj1/index.html">https://cal-cs184-student.github.io/project-webpages-sp23-andrewhuang56/proj1/index.html</a></p>
+<p>Website URL: <a href="https://andrewhuang56.github.io/cs184-project-webpages-sp23-andrewhuang56/proj1/index.html">https://cal-cs184-student.github.io/project-webpages-sp23-andrewhuang56/proj1/index.html</a></p>
 
 </body>
 </html>
