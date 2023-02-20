@@ -1,7 +1,193 @@
-<html>
-	<head>
-	</head>
-	<body>
-		Project 1 here
-	</body>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<style>
+  body {
+    padding: 100px;
+    width: 1000px;
+    margin: auto;
+    text-align: left;
+    font-weight: 300;
+    font-family: 'Open Sans', sans-serif;
+    color: #121212;
+  }
+  h1, h2, h3, h4 {
+    font-family: 'Source Sans Pro', sans-serif;
+  }
+</style>
+<title>CS 184 Rasterizer</title>
+<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+<link href="https://fonts.googleapis.com/css?family=Open+Sans|Source+Sans+Pro" rel="stylesheet">
+</head>
+
+
+<body>
+
+<h1 align="middle">CS 184: Computer Graphics and Imaging, Spring 2023</h1>
+<h1 align="middle">Project 1: Rasterizer</h1>
+<h2 align="middle">Andrew Huang, CS184</h2>
+
+<br><br>
+
+<div>
+
+<h2 align="middle">Overview</h2>
+<p>Give a high-level overview of what you implemented in this project. Think about what you've built as a whole. Share your thoughts on what interesting things you've learned from completing the project.</p>
+
+<p>In this project, we created a program that could rasterize multiple triangles. These triangles could be monochromatic, but they also could have a gradient in color or even sample their colors from other images. I think I approached this pretty standardly, going through the tasks as individual sets, except for implementing Task 5 and 6 simultaneously. In a tad bit more detail, we implemented basic rasterization of triangles, then added transformations, then finally used barycentric coordinates to allow for more complicated triangle coloring based on location within the triangles. I found out of bounds issues the hardest to deal with, especially when I was trying to zoom into an image. I solved this by clamping diligently and whenever necessary. I also didn’t realize for a while that the texture barycentric coordinates were between 0 and 1 instead of width and height (of level zero). Once I got that fixed, however, it was a lot better.</p>
+
+<h2 align="middle">Section I: Rasterization</h2>
+
+<h3 align="middle">Part 1: Rasterizing single-color triangles</h3>
+<div align="middle">
+<img src="figures/HW 1 Task 1 Diagram 1.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 1: Output to basic/test4.svg, normal viewing</figcaption>
+
+<img src="figures/HW 1 Task 1 Diagram 2.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 2: Output to basic/test4.svg, zoomed</figcaption>
+</div>
+<p>When trying to represent images on a pixelated screen, we often need to first break this shape down into simple polygons, and especially triangles. However, near the boundaries of triangles, often, only a portion of a pixel belongs to the triangle. Moreover, sometimes, multiple triangles are represented in the same pixel. Rasterizing is a process by which we decide which color to make our pixel, in this case, by looking at the color of the center of the pixel. My algorithm exactly does check each sample within the bounding box of the triangle, checking the sign of the inner product between the displacement vectors from the vertices to the pixel centers and the normal vectors to the sides. In Figure 1, we can see the output of my code to Test 4. If we look at Figure 2, we see something a bit interesting: the red triangle seems to have much more pronounced jaggies compared to the blue triangle and small bit of the green triangle. I’m not entirely sure why, but my guess is that it has something to do with the slopes of the sides or the fractional parts of the vertices. </p>
+
+<h3 align="middle">Part 2: Antialiasing triangles</h3>
+
+<div align="middle">
+<img src="figures/HW 1 Task 2 Diagram 1.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 1: Output to basic/test4.svg, 1x sample rate</figcaption>
+
+<img src="figures/HW 1 Task 2 Diagram 2.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 2: Output to basic/test4.svg, 4x sample rate</figcaption>
+
+<img src="figures/HW 1 Task 2 Diagram 3.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 3: Output to basic/test4.svg, 16x sample rate</figcaption>
+</div>
+
+<p>Supersampling involves sampling different subparts of each pixel to estimate the fraction of the pixel covered by a certain color. By taking more samples, we get a significantly closer estimate and can get a significantly less pixelated shape. In order to implement this, we use an intermediate color array, which we call the sample buffer, which stores the sample-ratesample-rate different samples per pixel, and, when rasterizing a triangle, we check to see whether each of these samples are truly within the triangle. So, as we can see ffom the figures, we can get partially shaded pixels that better represent the shapes than a single sample. In particular, not any more is every pixel being turned completely on or off depending on pixel size. Instead, we get a more accurate proportion of the shapes that cross each pixel.</p>
+
+<!--
+<p>Here is an example 2x2 gridlike structure using an HTML table. Each <b>tr</b> is a row and each <b>td</b> is a column in that row. You might find this useful for framing and showing your result images in an organized fashion.</p>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="images/image1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 1: </figcaption>
+      </td>
+      <td>
+        <img src="images/image2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="images/image3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+      <td>
+        <img src="images/image4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Caption goes here.</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+-->
+
+<h3 align="middle">Part 3: Transforms</h3>
+
+<div align="middle">
+<img src="figures/HW 1 Task 3 Diagram 1.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 1: Running Robot</figcaption>
+</div>
+<p>This part of the project involved transforming shapes, which includes rotating, translating, and scaling. In this picture, I tried to simulate the robot running to the side. It honestly didn’t work that great, partially because of shading, but I think that it at least looks like someone starting to kneel, perhaps to propose. To do this, I rotated the robot’s legs and arms primarily, and also skewed the body.</p>
+
+
+<h2 align="middle">Section II: Sampling</h2>
+
+<h3 align="middle">Part 4: Barycentric coordinates</h3>
+
+<div align="middle">
+<img src="figures/HW 1 Task 4 Diagram 1.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 1: Barycentric coordinate-colored triangle</figcaption>
+
+<img src="figures/HW 1 Task 4 Diagram 2.png" align="middle" width="400px"/>
+<figcaption align="middle">Figure 2: basic/task7.svg color wheel</figcaption>
+</div>
+<p>In this part of the project, we started incorporating barycentric coordinates, in this case for two dimensional color gradients. As we can see from Figure 1, we can apply barycentric coordinates to take a weighted average of the corners. In the figure, we assigned the top corner the color blue with the bottom colors being red and green. Then, we could use the barycentric coordinate representation to take a solid weighted average that could be translated to a color mixing. The closer we are to the blue corner, for example, the larger the barycentric coordinate corresponding to that corner we have, so the more blue we color the pixel.</p>
+
+
+<h3 align="middle">Part 5: "Pixel sampling" for texture mapping</h3>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="figures/HW 1 Task 5 Diagram 1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 1: Nearest sampling, 1 sample per pixel</figcaption>
+      </td>
+      <td>
+        <img src="figures/HW 1 Task 5 Diagram 2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 2: Nearest sampling, 16 samples per pixel.</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="figures/HW 1 Task 5 Diagram 3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 3: Bilinear sampling, 1 sample per pixel</figcaption>
+      </td>
+      <td>
+        <img src="figures/HW 1 Task 5 Diagram 4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 4: Bilinear sampling, 16 samples per pixel</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>In this part of the project, we explored pixel sampling. When we are taking an image and mapping it in a nonlinear way, or if we are shrinking or expanding the image, we will often get sample locations that don’t align perfectly with the pixels of the original image. Pixel sampling is a process of looking around the surrounding texels from the original texture and determining what color to use for the corresponding new pixel. There are two separate methods that we use in this assignment: nearest pixel and bilinear pixel sampling. In the nearest pixel sampling method, we look for where each sample maps in the original texture, and choose the closest texel. So, if the place that we are trying to color maps to (5.2, 7.9) in the texture space, we look at the (5, 8) texel. Then, for bilinear, we look at the four closest texels, and take a weighted average depending on how close we are to each texel. For example, back to (5.2, 7.9), we look at the (5, 7), (5, 8), (6, 7), and (6, 8) texels. Then, we weight the (5, 8) texel the most (in this example, 0.9 * 0.8 times) because it is the closest.</p>
+
+<p>In the figures above, I used the pixel inspector to look at an intersection of grid lines near the bottom left of the test 1 image. It is clear that sampling 16 times is slightly better per pixel, as we get worse jaggies for the 1 sample. It’s also pretty clear that bilinear helps with smoothing out the lines, so it is good for straight lines and the like. However, I have noticed that small details are often blurred by the bilinear sampling. This makes sense: by nature, we are sampling multiple, likely relatively different, texels, instead of a single texel, which blurs the whole image together, kind of like how the edges of shapes are somewhat blurred when supersampling. On the other hand, the sort of rounding that we do with nearest sampling inherently gives us a more pixelated feel. Imagine, for example, that the transformation required to go from frame buffer to texture is simply a zooming out. Then, unlike bilinear mapping which will try to continuously blend the texels together to get less drastic differences between pixels, the nearest sampling will simply look like a zoomed-in version of the texture (so each texel seemingly covers up more space).</p>
+
+<h3 align="middle">Part 6: "Level sampling" with mipmaps for texture mapping</h3>
+
+<div align="middle">
+  <table style="width=100%">
+    <tr>
+      <td>
+        <img src="figures/HW 1 Task 6 Diagram 1.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 1: Using Level Zero and Nearest Pixel Sampling</figcaption>
+      </td>
+      <td>
+        <img src="figures/HW 1 Task 6 Diagram 2.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 2: Using Level Zero and Bilinear Pixel Sampling</figcaption>
+      </td>
+    </tr>
+    <br>
+    <tr>
+      <td>
+        <img src="figures/HW 1 Task 6 Diagram 3.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 3: Using Level Nearest and Nearest Pixel Sampling</figcaption>
+      </td>
+      <td>
+        <img src="figures/HW 1 Task 6 Diagram 4.png" align="middle" width="400px"/>
+        <figcaption align="middle">Figure 4: Using Level Nearest and Bilinear Pixel Sampling</figcaption>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p>In this final part, I implemented level sampling. Often, our texture image is much larger or smaller than the canvas that we want to create our new image on. As a result, we sometimes want to sample more smartly. Indeed, if we sample using the whole image, we will often miss key details of the original texture. This is what causes some of the Moire patterns as we’ve seen in class. Therefore, we sometimes want to blur our texture in order to get at least some of the detail from the original texture averaged into the new picture. In order to do this, we introduce the concept of mipmaps, which are essentially these blurrings of the textures. We calculate an approximation of the derivative between the coordinate systems, which essentially tells us the ratio between the coordinate system sizes.</p>
+
+<p>Recall that the memory usage of actually adding these mipmap levels is not that significant: in particular, it adds at most a third more memory. Pixel sampling doesn’t add memory at all, really. Now, adding samples per picture, or at least how we did it, did multiply the memory usage by the sample rate, though I could also potentially imagine how you could avoid storing the whole memory by converting from sample buffer to frame buffer immediately. The speed will also be relatively similar for different pixel and level sampling types: we are still sampling around the same amount. If we are doing a continuous level method, however, indeed, we will naturally do twice the sampling, and bilinear pixel sampling takes four times the time, but these are constant factor slowdowns. On the other hand, supersampling will take sample_rate times the time, as we have to calculate for each entry in the sample buffer, which is sample_rate times the size. I cannot see this being optimized as easily. In the figures, I was sampling right above the cat’s right eye (so if the cat were rightside up, right below the cat’s right eye). As we can see in the figures, there might be a bit less detail with the nearest level (in particular, it’s hard to make out whiskers), but it’s also a smoother image (in the level zero image, the whiskers look like jaggies). So, in other words, it appears that using a higher level makes things much smoother, helping avoid aliasing, and it also seems to highlight detail a tad bit less (they blend into the background more). As we have discussed before, bilinear sampling will also blur the image a bit, leading to less aliasing but a bit more dull of a picture. Finally, supersampling will blur the images, and primarily the edges, something that lessens the impact of noise and aliasing from things like jaggies.</p>
+
+<!--
+<h2 align="middle">Section III: Art Competition</h2>
+<p>If you are not participating in the optional art competition, don't worry about this section!</p>
+
+<h3 align="middle">Part 7: Draw something interesting!</h3>
+-->
+
+<p>Website URL: <a href="https://cal-cs184-student.github.io/project-webpages-sp23-andrewhuang56/proj1/index.html">https://cal-cs184-student.github.io/project-webpages-sp23-andrewhuang56/proj1/index.html</a></p>
+
+</body>
 </html>
